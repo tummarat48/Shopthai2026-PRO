@@ -39,7 +39,7 @@ let adminUser=null;
 async function requireAdmin(){if(!db){notice('ตั้งค่า assets/config.js ก่อน');return false}const {data:{user}}=await db.auth.getUser();if(!user){$('#login').classList.remove('hidden');$('#dashboard').classList.add('hidden');return false}const {data,error}=await db.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();if(error||!data){notice('บัญชีนี้ยังไม่ได้รับสิทธิ์แอดมิน');await db.auth.signOut();$('#login').classList.remove('hidden');return false}adminUser=user;$('#login').classList.add('hidden');$('#dashboard').classList.remove('hidden');return true}
 async function initAdmin(){if(!db){notice('ตั้งค่า assets/config.js ก่อน');return}$('#loginForm').onsubmit=async e=>{e.preventDefault();const {error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});if(error)return notice(error.message);if(await requireAdmin())await loadAdmin()};$('#logout').onclick=async()=>{await db.auth.signOut();location.reload()};if(await requireAdmin())await loadAdmin()}
 let adminProducts=[],adminCategories=[],adminPromos=[];
-async function loadAdmin(){try{[adminProducts,adminCategories,adminPromos]=await Promise.all([list('products',q=>q.order('created_at',{ascending:false}).limit(1000)),list('categories',q=>q.order('sort_order')),list('promotions',q=>q.order('created_at',{ascending:false}))]);$('#stats').textContent=`สินค้า ${adminProducts.length} รายการ | หมวดหมู่ ${adminCategories.length} | โปรโมชั่น ${adminPromos.length}`;$('#pCategory').innerHTML='<option value="">ไม่ระบุ</option>'+adminCategories.map(c=>`<option value="${esc(c.slug)}">${esc(c.name)}</option>`).join('');renderAdminTables();await loadClickDashboard()}catch(e){notice(e.message)}}
+async function loadAdmin(){try{[adminProducts,adminCategories,adminPromos]=await Promise.all([list('products',q=>q.order('created_at',{ascending:false}).limit(1000)),list('categories',q=>q.order('sort_order')),list('promotions',q=>q.order('created_at',{ascending:false}))]);$('#stats').textContent=`สินค้า ${adminProducts.length} รายการ | หมวดหมู่ ${adminCategories.length} | โปรโมชั่น ${adminPromos.length}`;$('#pCategory').innerHTML='<option value="">ไม่ระบุ</option>'+adminCategories.map(c=>`<option value="${esc(c.slug)}">${esc(c.name)}</option>`).join('');renderAdminTables();await loadClickDashboard();await loadPromotionRecommendations()}catch(e){notice(e.message)}}
 function renderAdminTables(){$('#productRows').innerHTML=adminProducts.map(p=>`<tr><td>${esc(p.shopee_id)}</td><td>${esc(p.name).slice(0,110)}</td><td>${money(p.price)}</td><td>${p.is_active?'แสดง':'ซ่อน'}</td><td><button class="btn secondary" data-edit="${esc(p.id)}">แก้ไข</button> <button class="btn danger" data-delete="${esc(p.id)}">ลบ</button></td></tr>`).join('');$('#categoryRows').innerHTML=adminCategories.map(c=>`<tr><td>${esc(c.slug)}</td><td>${esc(c.name)}</td><td><button class="btn secondary" data-cat-edit="${esc(c.id)}">แก้ไข</button> <button class="btn danger" data-cat-delete="${esc(c.id)}">ลบ</button></td></tr>`).join('');$('#promoRows').innerHTML=adminPromos.map(p=>`<tr><td>${esc(p.title)}</td><td>${p.is_active?'แสดง':'ซ่อน'}</td><td><button class="btn secondary" data-promo-edit="${esc(p.id)}">แก้ไข</button> <button class="btn danger" data-promo-delete="${esc(p.id)}">ลบ</button></td></tr>`).join('')}
 async function write(table,record,id){const q=id?db.from(table).update(record).eq('id',id):db.from(table).insert(record);const {error}=await q;if(error)throw error}
 async function del(table,id){if(!confirm('ยืนยันการลบรายการนี้?'))return;const {error}=await db.from(table).delete().eq('id',id);if(error)throw error;await loadAdmin()}
@@ -88,4 +88,22 @@ async function loadClickDashboard(){
     body.innerHTML=(stats.top||[]).map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.name)}</td><td>${esc(p.shopee_id)}</td><td>${Number(p.clicks||0).toLocaleString('th-TH')}</td><td><a href="product.html?id=${encodeURIComponent(p.shopee_id)}" target="_blank" rel="noopener">ดูสินค้า</a></td></tr>`).join('')||'<tr><td colspan="5">ยังไม่มีข้อมูลคลิกในช่วง 30 วัน</td></tr>';
     status.textContent='สถิติคลิกในช่วง 30 วันล่าสุด (เวลาไทย)';
   }catch(e){status.textContent='ไม่สามารถโหลดสถิติได้: '+e.message;summary.textContent='';body.innerHTML='';}
+}
+
+// Patch04: recommendations are read-only and visible only after admin authorization.
+async function loadPromotionRecommendations(){
+  const status=$('#recommendStatus'),body=$('#recommendRows');
+  if(!status||!body||!adminUser)return;
+  status.textContent='กำลังประเมินคลิก...';
+  try{
+    const {data,error}=await db.rpc('affiliate_promotion_recommendations');
+    if(error)throw error;
+    const rows=Array.isArray(data)?data:[];
+    const labels={promote:'แนะนำให้ทำคลิป',review:'พักตรวจสอบคลิกผิดปกติ',collect:'รอข้อมูลเพิ่ม'};
+    body.innerHTML=rows.map(p=>`<tr><td><a href="product.html?id=${encodeURIComponent(p.shopee_id)}" target="_blank" rel="noopener">${esc(p.name)}</a></td><td>${Number(p.clicks30||0)}</td><td>${Number(p.clicks7||0)}</td><td>${Number(p.adjusted30||0)}</td><td>${Number(p.peak_per_minute||0)}</td><td>${Number(p.score||0)}</td><td>${labels[p.status]||'รอข้อมูลเพิ่ม'}</td></tr>`).join('')||'<tr><td colspan="7">ยังไม่มีข้อมูลคลิก</td></tr>';
+    status.textContent=`ประเมิน ${rows.length} สินค้า | แนะนำ ${rows.filter(p=>p.status==='promote').length} | พักตรวจสอบ ${rows.filter(p=>p.status==='review').length}`;
+  }catch(err){status.textContent='โหลดคำแนะนำไม่สำเร็จ: '+err.message;}
+}
+if(document.body.dataset.page==='admin'){
+  $('#refreshRecommendations')?.addEventListener('click',loadPromotionRecommendations);
 }
