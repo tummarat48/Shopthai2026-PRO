@@ -50,14 +50,22 @@
       if (url) {
         const a = text('a', 'ซื้อที่ Shopee', 'st-buy');
         a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer sponsored nofollow';
-        // Only count clicks if the installed server-side endpoint is configured.
+        // Optional Patch 05 RPC; does not delay Shopee navigation.
         a.addEventListener('click', () => {
-          if (!cfg.clickEndpoint) return;
+          if (cfg.enableClickTracking !== true) return;
           try {
-            const target = new URL(cfg.clickEndpoint);
-            if (target.protocol !== 'https:' || target.origin !== endpoint) return;
-            fetch(target.href, {method:'POST', headers:{...headers,'Content-Type':'application/json'}, body:JSON.stringify({shopee_id:String(p.shopee_id)}), keepalive:true}).catch(()=>{});
-          } catch { /* outbound purchase link must never be blocked */ }
+            const storageKey = 'st-click-visitor-v1';
+            let visitor = sessionStorage.getItem(storageKey);
+            if (!visitor || !/^[a-f0-9-]{36}$/.test(visitor)) {
+              visitor = crypto.randomUUID();
+              sessionStorage.setItem(storageKey, visitor);
+            }
+            fetch(`${endpoint}/rest/v1/rpc/record_affiliate_click_v5`, {
+              method: 'POST', mode: 'cors', keepalive: true,
+              headers: {...headers, 'Content-Type': 'application/json'},
+              body: JSON.stringify({p_shopee_id: String(p.shopee_id), p_visitor: visitor, p_source: 'blogger'})
+            }).catch(() => {});
+          } catch { /* Tracking never blocks shopping. */ }
         });
         card.append(a);
       } else card.append(text('p', 'ยังไม่มีลิงก์ซื้อที่ตรวจสอบได้', 'st-muted'));
