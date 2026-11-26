@@ -1,1 +1,11 @@
-สำรองไฟล์เดิม แล้วอัปโหลด member.html และ dashboard.html ที่ root และ JS ทั้งสองไฟล์ใน assets ของ GitHub เดิม ต้องติดตั้ง V4.2 SQL และ CSS ก่อน ไม่ต้องแก้ SMTP หรือ OAuth ทดสอบ Login, Google, โปรไฟล์ใหม่, เปิดร้าน, แก้ไขบัญชี, ออกจากระบบ และ recovery. ยังไม่ได้ทดสอบกับ Supabase จริง
+V4.3 — Member Store Admin (แบบ B)
+ข้อกำหนด: เว็บไซต์ติดตั้ง V4.2 และ SQL V4.2 แล้ว และมี assets/cms/settings.js, assets/member-preview.css, assets/config.js, assets/app.js, assets/style.css เดิม
+1. สำรอง GitHub เวอร์ชันปัจจุบันทั้งหมดก่อน (โดยเฉพาะ admin.html)
+2. เปรียบเทียบ owner-admin.html กับ admin.html เดิมบน GitHub: ไฟล์นี้อ้างอิง ZIP Shopthai2026-PRO-main (1).zip ไม่ใช่ live repository หากมีการแก้ไขใหม่กว่า ให้คัดลอก admin.html ล่าสุดไปเป็น owner-admin.html แทน และแก้ลิงก์เมนูเจ้าของให้ชี้ owner-admin.html
+3. อัปโหลด owner-admin.html ก่อน ทดสอบบัญชี Production เดิมและฟังก์ชันจัดการส่วนกลาง
+4. อัปโหลด member.html, admin.html, dashboard.html และไฟล์ 3 ไฟล์ใน assets/ ตามตำแหน่งเดิม แล้วรอ Deploy และ Ctrl+F5
+5. ทดสอบออกจากระบบแล้วเปิด admin.html ต้องกลับ member.html; Login สมาชิก A ต้องเข้า admin.html และเห็นร้าน A เท่านั้น; เปิดร้าน/แก้ไข/เพิ่ม/ลบสินค้าทดลอง; Login B ต้องไม่เห็นร้าน A; ทดสอบ owner-admin.html ด้วยบัญชีสมาชิกที่ไม่ใช่ admin ต้องไม่เข้าถึงข้อมูลส่วนกลาง
+6. ทดสอบ Google Login และ Email Login รวมถึง recovery เดิม
+ไม่มี SQL ใหม่ ไม่เปลี่ยน config, app.js, CMS settings, OAuth, SMTP หรือฐานข้อมูลใดๆ
+ข้อจำกัด: ใช้ RLS/RPC เดิมเป็นขอบเขตความปลอดภัย ต้องทดสอบจริง; owner-admin ยังใช้ Login Production แยก; สินค้าสมาชิกยังเป็น draft; CSV, สถิติสมาชิก, การเผยแพร่และการชำระเงินยังไม่เพิ่ม
+Rollback: คืนไฟล์ที่ทับจาก GitHub commit ก่อนอัปเดต และลบ owner-admin.html หากเป็นไฟล์ใหม่ ไม่ต้อง rollback SQL
