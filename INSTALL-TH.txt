@@ -1,7 +1,8 @@
-V3.4.1 Header Banner Fix
-สำรองไฟล์เดิมทั้ง 5 ไฟล์ก่อน แล้วอัปโหลดทับตามเส้นทางเดิมใน GitHub (ทดสอบ branch แยกก่อน)
-ไม่แก้ settings.js หรือ SQL ไม่ต้องอัปโหลดภาพใหม่
-เปิด CMS กด Ctrl+F5 แล้วโหลดค่าที่เผยแพร่ หรือโหลดร่างในเครื่องตามที่เคยบันทึก
-แบนเนอร์อยู่ใต้เมนูเหนือส่วนที่จัดลำดับได้เสมอ ซ่อนเมื่อ URL ว่าง
-ทดสอบมือถือ เดสก์ท็อป และส่งออก HTML ก่อนเผยแพร่
-ย้อนกลับโดยคืนไฟล์เดิมทั้ง 5 ไฟล์พร้อมกัน
+V4.1 PREVIEW — ใช้ทดสอบเท่านั้น
+สำรอง repo ล่าสุดก่อน แล้วสร้าง branch v41-preview (ไม่ merge main จนทดสอบ RLS/API ครบ)
+อัปโหลด pricing.html, member.html, dashboard.html ที่ root และไฟล์ 3 ไฟล์ใน assets/ ไป assets/ เดิม
+ต้องมี assets/cms/settings.js ที่ตั้ง CMS_STAGING URL และ publishable key ถูกต้องอยู่แล้ว ไม่แก้ไฟล์นี้
+ทดสอบผ่าน local HTTP server หรือ preview deployment แยก ไม่เปิดสมัครสาธารณะก่อนตรวจสอบ Auth settings
+ทดสอบ A/B login, profile, dashboard, quota, edit/delete ข้ามบัญชี, logout, recovery และ Google (ต้องตั้ง OAuth ก่อน)
+ไม่มี checkout, QR, public shop, publish, customizer; ไม่รัน SQL เพิ่ม ไม่แก้ production
+ย้อนกลับด้วยการ revert commit หรือทิ้ง branch preview
