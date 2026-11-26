@@ -1,8 +1,6 @@
-V4.1 PREVIEW — ใช้ทดสอบเท่านั้น
-สำรอง repo ล่าสุดก่อน แล้วสร้าง branch v41-preview (ไม่ merge main จนทดสอบ RLS/API ครบ)
-อัปโหลด pricing.html, member.html, dashboard.html ที่ root และไฟล์ 3 ไฟล์ใน assets/ ไป assets/ เดิม
-ต้องมี assets/cms/settings.js ที่ตั้ง CMS_STAGING URL และ publishable key ถูกต้องอยู่แล้ว ไม่แก้ไฟล์นี้
-ทดสอบผ่าน local HTTP server หรือ preview deployment แยก ไม่เปิดสมัครสาธารณะก่อนตรวจสอบ Auth settings
-ทดสอบ A/B login, profile, dashboard, quota, edit/delete ข้ามบัญชี, logout, recovery และ Google (ต้องตั้ง OAuth ก่อน)
-ไม่มี checkout, QR, public shop, publish, customizer; ไม่รัน SQL เพิ่ม ไม่แก้ production
-ย้อนกลับด้วยการ revert commit หรือทิ้ง branch preview
+สำรอง CMS และ GitHub ก่อน
+รัน V4.2-shop-details.sql ใน CMS staging เท่านั้น ก่อนอัปโหลด dashboard.html และ assets สองไฟล์ตามตำแหน่งเดิม
+ไม่ต้องอัปโหลด SQL ขึ้นเว็บ ไม่เปลี่ยน member.html หรือ Google OAuth
+ทดสอบเปิดร้าน บันทึกรายละเอียด โหลดใหม่ แยกบัญชี A/B และเพิ่มสินค้า
+หากผิดพลาดให้คืนไฟล์เว็บเดิม ไม่ลบข้อมูลหรือคอลัมน์เอง
+ยังไม่ทดสอบ SQL บน Supabase จริง ไม่เปิดรับเงินหรือเผยแพร่สินค้า
